@@ -1,0 +1,15 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    logfmt (0.0.10)
+    pg (1.2.3)
+
+PLATFORMS
+  arm64-darwin-20
+
+DEPENDENCIES
+  logfmt
+  pg
+
+BUNDLED WITH
+   2.2.23

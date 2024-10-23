@@ -1,0 +1,3 @@
+---
+BUNDLE_WITHOUT: "assets"
+BUNDLE_WITH: "test"
