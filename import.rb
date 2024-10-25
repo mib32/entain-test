@@ -1,42 +1,39 @@
 # frozen_string_literal: true
 
-require 'pg'
-db_params = {
-  host: 'localhost',
-  port: '5433',
-  dbname: 'entain', # replace with your actual database name
-  user: 'antonmurygin'
-}
+require 'click_house'
 
-begin
-  $conn = PG.connect(db_params)
+ClickHouse.config do |config|
+  config.logger = Logger.new(STDOUT)
+  config.adapter = :net_http
+  config.database = 'entain'
+  config.url = 'http://localhost:8123'
+end
 
-  def insert(log_data)
-    $conn.exec_params(
-      "INSERT INTO events (timestamp, ip, user_id, amount, type) VALUES ($1, $2, $3, $4, $5)",
-      [log_data['timestamp'], log_data['ip'], log_data['user'], log_data['amount'], log_data['type']]
-    )
-  rescue PG::Error => e
-    puts "An error occurred: #{e.message}"
-  end
+$columns = ['timestamp','ip','user','amount','type']
+
+def insert(log_data)
+  ClickHouse.connection.insert('events', columns: ['timestamp','ip','user_id','amount','type'], values: log_data)
+end
 
 
-  File.open('data', 'r') do |f|
-    f.each_line do |line|
-      log_data = {}
-      puts line
-      line.scan(/\[(?<timestamp>.*?)\] \[(?<ip>.*?)\]|\b(?<key>\w+)=(?:"(?<quoted_value>[^"]+)"|(?<value>\S+))/) do |timestamp, ip, key, quoted_value, value|
-        if timestamp
-          log_data['timestamp'] = timestamp
-          log_data['ip'] = ip
-        elsif key
-          log_data[key] = quoted_value || value
-        end
+File.open('logs', 'r') do |f|
+  arr = []
+  f.each_line.with_index do |line, i|
+    log_data = {}
+    line.scan(/\[(?<timestamp>.*?)\] \[(?<ip>.*?)\]|\b(?<key>\w+)=(?:"(?<quoted_value>[^"]+)"|(?<value>\S+))/) do |timestamp, ip, key, quoted_value, value|
+      if timestamp
+        log_data['timestamp'] = timestamp
+        log_data['ip'] = ip
+      elsif key
+        log_data[key] = quoted_value || value
       end
-      insert(log_data)
+    end
+    arr << log_data.fetch_values('timestamp','ip','user','amount','type')
+    if i % 5000 == 0
+      puts i
+      insert(arr)
+      arr = []
     end
   end
-
-ensure
-  $conn.close if $conn
+  insert(arr)
 end
