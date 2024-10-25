@@ -130,7 +130,7 @@ ORDER BY
   win_percentage DESC;
 
 
-  SELECT
+SELECT
   user_id,
   ip,
   (
@@ -142,6 +142,5 @@ GROUP BY
   user_id, ip
 HAVING
   COUNTIf(type = 'bet') > 0
-  and user_id = 24
 ORDER BY
   avg_win_per_bet DESC;

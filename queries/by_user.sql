@@ -1,14 +1,14 @@
 
-    SELECT
-      user_id,
-      SUM(multiIf(type = 'bet', amount, 0)) - SUM(multiIf(type = 'win', amount, 0)) AS net_revenue,
-      count(*)
-    FROM
-      events
-    GROUP BY
-      user_id
-    ORDER BY
-      net_revenue DESC
+SELECT
+  user_id,
+  SUM(multiIf(type = 'bet', amount, 0)) - SUM(multiIf(type = 'win', amount, 0)) AS net_revenue,
+  count(*)
+FROM
+  events
+GROUP BY
+  user_id
+ORDER BY
+  net_revenue DESC
 
 SELECT
   user_id,
